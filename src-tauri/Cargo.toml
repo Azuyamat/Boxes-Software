@@ -1,0 +1,32 @@
+[package]
+name = "boxes_software"
+version = "0.1.0"
+edition = "2021"
+authors = ["Azuyamat"]
+description = "Quick and easy GUI to create and manage Minecraft servers"
+license-file = "LICENSE"
+#repository = "https://github.com/Azuyamat/boxes"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+thiserror = "1.0.50"
+reqwest = { version = "0.11.22", features = ["blocking", "json"] }
+toml = "0.8.8"
+serde = { version = "1.0.193", features = ["derive"] }
+indicatif = "0.17.7"
+blocking = "1.5.1"
+confy = "0.5.1"
+clap = { version = "4.4.11", features = ["derive"] }
+inquire = "0.6.2"
+tauri = { version = "1.5.3", features = ["shell-open"] }
+boxes = "0.1.5"
+
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
