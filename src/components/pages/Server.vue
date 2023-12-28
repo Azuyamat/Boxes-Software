@@ -1,7 +1,8 @@
 <script setup lang="js">
-import {useRoute} from 'vue-router';
-import {inject, onMounted, ref, watch} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
+import {inject, ref, watch} from 'vue';
 import {invoke} from "@tauri-apps/api";
+import Layout from "../Layout.vue";
 
 const jarImages = {
   "paper": "/paper-logo.png",
@@ -10,53 +11,91 @@ const jarImages = {
   "unknown": "/pickaxe.png"
 }
 
+const router = useRouter();
 const route = useRoute();
 const serverName = ref(route.params.id);
 const serverData = ref({});
+const serverRunning = ref(false);
 const jarImage = ref(jarImages.unknown);
-
-onMounted(async () => {
-  const promptUser = inject('promptUser');
-  let server = await getServer(serverName.value);
-  serverData.value = server;
-  jarImage.value = jarImages[server.jar_name.toLowerCase()] || jarImages.unknown
-});
+const sidebar = inject("sidebar");
+const prompt = inject("prompt");
+const toast = inject("toast");
 
 watch( () => route.params.id, async (newId) => {
   serverName.value = newId;
   let server = await getServer(newId);
   serverData.value = server;
-  jarImage.value = jarImages[server.jar_name.toLowerCase()] || jarImages.unknown;
-});
+  jarImage.value = jarImages[server.jar.name.toLowerCase()] || jarImages.unknown
+  serverRunning.value = await isServerRunning();
+}, {immediate: true});
 
 async function getServer(name) {
   return await invoke("get_server", {name: name});
 }
+
+async function startServer() {
+  toast("▶️", "Starting server");
+  invoke("start_server", {name: serverName.value});
+  toast("✅", "Server started");
+  serverRunning.value = true;
+}
+
+async function stopServer() {
+  toast("⏹️", "Stopping server");
+  invoke("stop_server", {name: serverName.value});
+  toast("✅", "Server stopped");
+  serverRunning.value = false;
+}
+
+async function deleteServer() {
+  let confirm = await prompt("??",
+      "Are you sure you want to delete this server? This action cannot be undone. Type the server name to confirm: "+serverName.value);
+  if (confirm !== serverName.value) return toast("❌", "Server name does not match");
+  toast("🗑️", "Deleting server");
+  await invoke("delete_server", {name: serverName.value});
+  toast("✅", "Server deleted");
+  router.push("/servers");
+  sidebar.reloadSidebar();
+
+}
+
+async function isServerRunning() {
+  return await invoke("is_server_running", {name: serverName.value});
+}
+
+async function promptName() {
+  let newName = await prompt("Rename server", "Enter a new name for the server");
+  if (!newName) return;
+  toast("✏️", "Renaming server to " + newName);
+  await invoke("rename_server", {oldName: serverName.value, newName: newName});
+  serverName.value = newName;
+  router.push(`/server/${newName}`)
+  sidebar.reloadSidebar();
+}
 </script>
 
 <template>
-  <div class="container">
-    <header :style="`--image: url(${jarImage})`">
-      <h2>{{ serverName }}</h2>
-      <ul>
-        <li>
-          {{ serverData.jar_name }} {{ serverData.version }} ({{ serverData.build }})
-        </li>
-        <li>
-          Last refreshed <span id="refresh">3 minutes ago</span>
-        </li>
-      </ul>
-    </header>
-    <div class="controls">
-      <button>▶️ Start</button>
-      <button>⏹️ Stop</button>
-      <button>🤚 Delete</button>
-      <button @click="changeName">✏️ Rename</button>
+  <Layout>
+    <div class="container">
+      <header :style="`--image: url(${jarImage})`">
+        <h2>{{ serverName }}</h2>
+        <ul>
+          <li>
+            {{ serverData.jar?.name }} {{ serverData.jar?.version }} ({{ serverData.jar?.build }})
+          </li>
+        </ul>
+      </header>
+      <div class="controls">
+        <button @click="startServer" v-if="!serverRunning">▶️ Start</button>
+        <button @click="stopServer" v-else>⏹️ Stop</button>
+        <button @click="deleteServer">🤚 Delete</button>
+        <button @click="promptName">✏️ Rename</button>
+      </div>
+      <!--    Players-->
+      <!--    Console-->
+      <!--    Settings-->
     </div>
-<!--    Players-->
-<!--    Console-->
-<!--    Settings-->
-  </div>
+  </Layout>
 </template>
 
 <style scoped>

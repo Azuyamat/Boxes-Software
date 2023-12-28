@@ -8,13 +8,10 @@
 )]
 
 use crate::error::Error;
-use crate::minecraft::jars;
-use crate::minecraft::server::Server;
-use crate::utils::{colorize, Color};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
+use notch::servers::server::Server;
 
 #[derive(Deserialize, Serialize, Clone, Default)]
 pub struct Config {
@@ -28,42 +25,15 @@ pub struct ServerInfo {
 }
 
 impl ServerInfo {
-    pub fn from_server(server: &Server) -> Self {
+    pub fn from_server(server: Server) -> Self {
         Self {
-            server_name: server.server_name.clone(),
-            location: server.location.clone(),
+            server_name: server.name,
+            location: server.location,
         }
     }
 }
 
 impl Config {
-    pub fn print_info(&self) -> Result<(), Error> {
-        println!("🗃️ Config info:");
-        println!("  💾 Servers:");
-        if self.servers.is_empty() {
-            println!("      No servers!");
-        }
-        let running_servers = Command::new("jps").arg("-v").output()?;
-        let running_servers = String::from_utf8(running_servers.stdout).unwrap_or_default();
-        for server in &self.servers {
-            let running =
-                running_servers.contains(format!("-Dname={}", server.server_name.trim()).as_str());
-            let running = if running {
-                colorize("Running", Color::Green)
-            } else {
-                colorize("Stopped", Color::Red)
-            };
-            println!(
-                "      ➥ 📦 {} ({}) ({})",
-                server.server_name,
-                server.location.display(),
-                running
-            );
-        }
-        jars::load().unwrap().print_info();
-        Ok(())
-    }
-
     pub fn load() -> Result<Self, Error> {
         let mut config: Self = confy::load("boxes", None)?;
         let mut changed = false;
@@ -90,6 +60,13 @@ impl Config {
         Ok(config)
     }
 
+    pub fn save(&self) -> Result<(), Error> {
+        println!("📝 Saving config...");
+        confy::store("boxes", None, self)?;
+        println!("📝 Saved config!");
+        Ok(())
+    }
+
     pub fn delete() -> Result<(), Error> {
         println!("📝 Deleting config...");
         let path = confy::get_configuration_file_path("config", None)?;
@@ -98,7 +75,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn add_server(&mut self, server: &Server) {
+    pub fn add_server(&mut self, server: Server) {
         println!("📝 Adding server to config...");
         if self.servers.iter().any(|s| s.location == server.location) {
             println!("⚠️ A server with the same location already exists! Overriding...");
@@ -122,16 +99,15 @@ impl Config {
             .servers
             .iter()
             .find(|s| s.server_name.to_lowercase() == server_name.to_lowercase())?;
-        let location_str = server_info.location.to_str()?;
-        Server::from_path(location_str).ok()
+        Server::from_path(server_info.location.as_path()).ok()
     }
 
-    pub fn save_server(&mut self, server: &Server) -> Result<(), Error> {
+    pub fn save_server(&mut self, server: Server) -> Result<(), Error> {
         println!("📝 Saving server to config...");
         let index = self
             .servers
             .iter()
-            .position(|s| s.server_name == server.server_name)
+            .position(|s| s.server_name == server.name)
             .ok_or(Error::ResourceNotFound("Server not found".to_string()))?;
         self.servers.remove(index);
         let server_info = ServerInfo::from_server(server);

@@ -13,8 +13,12 @@ const getServers = async () => {
 const servers = ref([]);
 
 onMounted(async () => {
-  servers.value = await getServers();
+  reloadSidebar();
 });
+
+async function reloadSidebar() {
+  servers.value = await getServers() || [];
+}
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value;
@@ -22,7 +26,10 @@ const toggleSidebar = () => {
 
 const goTo = (path) => {
   router.push(path);
+  sidebarVisible.value = false;
 };
+
+defineExpose({toggleSidebar, goTo, reloadSidebar});
 </script>
 
 <template>
@@ -34,21 +41,29 @@ const goTo = (path) => {
       <h2>Menu</h2>
       <li aria-label="home" @click="goTo(`/`)">
         <span role="img" aria-label="rocket">🚀</span>
-        <router-link to="/">Home</router-link>
+        <h3>Home</h3>
       </li>
       <li aria-label="settings" @click="goTo(`/settings`)">
         <span role="img" aria-label="settings">⚙️</span>
-        <router-link to="/settings">Settings</router-link>
+        <h3>Settings</h3>
       </li>
       <li aria-label="about" @click="goTo(`/about`)">
         <span role="img" aria-label="about">📖</span>
-        <router-link to="/about">About</router-link>
+        <h3>About</h3>
+      </li>
+      <li aria-label="servers" @click="goTo(`/servers`)">
+        <span role="img" aria-label="servers">📚</span>
+        <h3>Servers</h3>
       </li>
       <li class="separator" />
       <h2>Servers</h2>
       <li v-for="server in servers" :key="2" aria-label="server" @click="goTo(`/server/${server.server_name}`)">
         <span role="img" aria-label="server">🖥️</span>
-        <router-link :to="`/server/${server.server_name}`">{{ server.server_name }}</router-link>
+        <h3>{{ server.server_name }}</h3>
+      </li>
+      <li aria-label="add" @click="goTo(`/new-server`)">
+        <span role="img" aria-label="add">📦</span>
+        <h3>New Server</h3>
       </li>
       <li class="separator" />
     </ul>
@@ -115,12 +130,15 @@ const goTo = (path) => {
   user-select: none;
   position: relative;
   backdrop-filter: blur(10px);
+  opacity: 0.2;
+  transition: all 0.2s ease-in-out;
 }
 
 .sidebar header span:hover {
   cursor: pointer;
   background: rgb(23, 23, 23);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 1;
 }
 
 .sidebar > ul {

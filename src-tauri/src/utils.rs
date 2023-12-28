@@ -1,4 +1,3 @@
-use crate::error::Error;
 use reqwest::blocking::Response;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -79,9 +78,4 @@ macro_rules! get_exec_time {
         let end = start.elapsed();
         format!("{:.2}s", end.as_secs_f32())
     }};
-}
-
-pub fn read_line(prompt: &str) -> Result<String, Error> {
-    let text = inquire::Text::new(prompt).prompt()?;
-    Ok(text)
 }

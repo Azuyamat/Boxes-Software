@@ -19,10 +19,12 @@ pub enum Error {
     ResourceNotFound(String),
     #[error("🚨 Server not found")]
     ServerNotFound,
+    #[error("Notch error: {0}")]
+    Notch(#[from] notch::error::Error),
 }
 
-impl Into<InvokeError> for Error {
-    fn into(self) -> InvokeError {
-        InvokeError::from(self.to_string())
+impl From<Error> for InvokeError {
+    fn from(val: Error) -> Self {
+        InvokeError::from(val.to_string())
     }
 }

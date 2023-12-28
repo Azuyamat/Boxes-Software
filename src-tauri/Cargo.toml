@@ -24,7 +24,7 @@ confy = "0.5.1"
 clap = { version = "4.4.11", features = ["derive"] }
 inquire = "0.6.2"
 tauri = { version = "1.5.3", features = ["shell-open"] }
-boxes = "0.1.5"
+notch = "0.1.9"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem

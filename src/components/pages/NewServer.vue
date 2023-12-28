@@ -4,12 +4,7 @@ import Layout from "../Layout.vue"
 
 <template>
   <Layout>
-    <div>
-      <h1>asdsad</h1>
-      <p>
-        This is the settings page.
-      </p>
-    </div>
+    <h1>Create a new server</h1>
   </Layout>
 </template>
 

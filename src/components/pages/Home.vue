@@ -1,16 +1,26 @@
 <script setup lang="ts">
-
+import Layout from "../Layout.vue"
 </script>
 
 <template>
-  <div>
-    <h1>asdsad</h1>
+  <Layout>
+    <h1>Home</h1>
     <p>
-      This is the home page.
+      Welcome to <strong>Boxes</strong>, your modern solution for <strong>managing</strong> and
+      <strong>creating</strong> servers
     </p>
-  </div>
+    <h2>Favorite Servers</h2>
+    <p>
+      You can add your favorite servers to this list by clicking the <strong>star</strong> icon on the
+      <strong>Servers</strong> page.
+    </p>
+  </Layout>
 </template>
 
 <style scoped>
-
+h2 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
 </style>
